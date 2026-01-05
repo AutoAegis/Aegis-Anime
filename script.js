@@ -10,8 +10,8 @@ const imagesList = [
 
 const snakeCount = 5;
 const snakeLength = 5;
-const amplitude = 20;
-const speed = 2;
+const amplitude = 20; 
+const speed = 2;      
 const spinSpeed = 2;
 const rowSpacing = 120;
 const segmentSpacing = 60;
@@ -31,7 +31,7 @@ function createSnake(yBase, direction) {
     img.x = direction === 1 ? -i * segmentSpacing : window.innerWidth + i * segmentSpacing;
     img.yBase = yBase;
     img.direction = direction;
-    img.phase = i * 0.5;
+    img.phase = i * 0.5; 
     img.rotation = Math.random() * 360;
     container.appendChild(img);
     snake.push(img);
@@ -39,8 +39,9 @@ function createSnake(yBase, direction) {
   return snake;
 }
 
+// create snakes in alternating directions
 for (let i = 0; i < snakeCount; i++) {
-  const direction = i % 2 === 0 ? 1 : -1; // alt dirrr
+  const direction = i % 2 === 0 ? 1 : -1; 
   const yBase = i * rowSpacing + 50;
   snakes.push(createSnake(yBase, direction));
 }
@@ -49,19 +50,23 @@ function animate() {
   snakes.forEach(snake => {
     snake.forEach((img, index) => {
       if (index === 0) {
-        img.x += img.direction * speed; // head movesssss
+        img.x += img.direction * speed; // head moves horizontally
       } else {
         const prev = snake[index - 1];
-        img.x += (prev.x - img.x - img.direction * segmentSpacing) * 0.1; // follow headddd
-        img.phase += 0.05;
+        img.x += (prev.x - img.x - img.direction * segmentSpacing) * 0.1; // follow horizontally
       }
 
+      // horizontal wrap
       if (img.direction === 1 && img.x > window.innerWidth + segmentSpacing) img.x = -segmentSpacing;
       if (img.direction === -1 && img.x < -segmentSpacing) img.x = window.innerWidth + segmentSpacing;
 
+      // vertical wiggle only
       const y = img.yBase + Math.sin(img.phase) * amplitude;
       img.style.top = `${y}px`;
+
+      // rotation
       img.style.transform = `translateX(${img.x}px) rotate(${img.rotation}deg)`;
+      img.phase += 0.05;
       img.rotation += spinSpeed;
     });
   });
