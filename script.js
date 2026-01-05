@@ -10,10 +10,10 @@ const imagesList = [
 
 const snakeCount = 5;
 const snakeLength = 5;
-const amplitude = 30;
+const amplitude = 20;
 const speed = 2;
 const spinSpeed = 2;
-const rowSpacing = 100;
+const rowSpacing = 120;
 
 let snakes = [];
 
@@ -21,23 +21,27 @@ function getRandomImage() {
   return imagesList[Math.floor(Math.random() * imagesList.length)];
 }
 
-for (let i = 0; i < snakeCount; i++) {
-  const direction = i % 2 === 0 ? 1 : -1;
-  const yBase = i * rowSpacing + 50;
+function createSnake(yBase, direction) {
   const snake = [];
-  for (let j = 0; j < snakeLength; j++) {
+  for (let i = 0; i < snakeLength; i++) {
     const img = document.createElement('img');
     img.src = getRandomImage();
     img.classList.add('snake-image');
-    img.x = direction === 1 ? -j * 60 : window.innerWidth + j * 60;
+    img.x = direction === 1 ? -i * 60 : window.innerWidth + i * 60;
     img.yBase = yBase;
     img.direction = direction;
-    img.phase = j * 0.5;
-    img.rotation = 0;
+    img.phase = i * 0.5;
+    img.rotation = Math.random() * 360;
     container.appendChild(img);
     snake.push(img);
   }
-  snakes.push(snake);
+  return snake;
+}
+
+for (let i = 0; i < snakeCount; i++) {
+  const direction = i % 2 === 0 ? 1 : -1;
+  const yBase = i * rowSpacing + 50;
+  snakes.push(createSnake(yBase, direction));
 }
 
 function animate() {
@@ -55,8 +59,8 @@ function animate() {
 
       const y = img.yBase + Math.sin(img.phase) * amplitude;
       img.style.top = `${y}px`;
-      img.rotation += spinSpeed;
       img.style.transform = `translateX(${img.x}px) rotate(${img.rotation}deg)`;
+      img.rotation += spinSpeed;
     });
   });
 
