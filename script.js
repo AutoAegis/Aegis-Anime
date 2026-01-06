@@ -4,70 +4,82 @@ const imagesList = [
   'https://github.com/AutoAegis/Aegis-Anime/blob/main/Aegis%20White.png?raw=true',
   'https://github.com/AutoAegis/Aegis-Anime/blob/main/Aegis%20Org.png?raw=true',
   'https://github.com/AutoAegis/Aegis-Anime/blob/main/Aegis%20Purple.png?raw=true',
-  'https://github.com/AutoAegis/Aegis-Anime/blob/main/Aegis%20Red.png?raw=true',
-  'https://github.com/AutoAegis/Aegis-Anime/blob/main/Aegis%20White.png?raw=true'
+  'https://github.com/AutoAegis/Aegis-Anime/blob/main/Aegis%20Red.png?raw=true'
 ];
 
 const snakeCount = 5;
-const snakeLength = 5;
-const amplitude = 20; 
-const speed = 20;      
-const spinSpeed = 2;
+const snakeLength = 6;
+const speed = 2.5;
+const amplitude = 25;
+const waveSpeed = 0.08;
+const segmentSpacing = 50;
 const rowSpacing = 120;
-const segmentSpacing = 60;
 
 let snakes = [];
 
-function getRandomImage() {
+function randomImage() {
   return imagesList[Math.floor(Math.random() * imagesList.length)];
 }
 
 function createSnake(yBase, direction) {
-  const snake = [];
+  const snake = {
+    direction,
+    phase: Math.random() * Math.PI * 2,
+    segments: []
+  };
+
   for (let i = 0; i < snakeLength; i++) {
     const img = document.createElement('img');
-    img.src = getRandomImage();
-    img.classList.add('snake-image');
-    img.x = direction === 1 ? -i * segmentSpacing : window.innerWidth + i * segmentSpacing;
-    img.yBase = yBase;
-    img.direction = direction;
-    img.phase = i * 0.5; 
-    img.rotation = Math.random() * 360;
+    img.src = randomImage();
+    img.className = 'snake-image';
+
+    img.x = direction === 1
+      ? -i * segmentSpacing
+      : window.innerWidth + i * segmentSpacing;
+
+    img.y = yBase;
     container.appendChild(img);
-    snake.push(img);
+
+    snake.segments.push({ img, x: img.x, y: img.y });
   }
+
   return snake;
 }
 
-// create snakes in alternating directions
 for (let i = 0; i < snakeCount; i++) {
-  const direction = i % 2 === 0 ? 1 : -1; 
-  const yBase = i * rowSpacing + 50;
-  snakes.push(createSnake(yBase, direction));
+  const direction = i % 2 === 0 ? 1 : -1;
+  snakes.push(createSnake(80 + i * rowSpacing, direction));
 }
 
 function animate() {
   snakes.forEach(snake => {
-    snake.forEach((img, index) => {
-      if (index === 0) {
-        img.x += img.direction * speed; // head moves horizontally
-      } else {
-        const prev = snake[index - 1];
-        img.x += (prev.x - img.x - img.direction * segmentSpacing) * 0.1; // follow horizontally
-      }
+    snake.phase += waveSpeed;
 
-      // horizontal wrap
-      if (img.direction === 1 && img.x > window.innerWidth + segmentSpacing) img.x = -segmentSpacing;
-      if (img.direction === -1 && img.x < -segmentSpacing) img.x = window.innerWidth + segmentSpacing;
+    const head = snake.segments[0];
+    head.x += snake.direction * speed;
+    head.y += Math.sin(snake.phase) * 0.6;
 
-      // vertical wiggle only
-      const y = img.yBase + Math.sin(img.phase) * amplitude;
-      img.style.top = `${y}px`;
+    if (snake.direction === 1 && head.x > window.innerWidth + 60) {
+      head.x = -60;
+    }
+    if (snake.direction === -1 && head.x < -60) {
+      head.x = window.innerWidth + 60;
+    }
 
-      // rotation
-      img.style.transform = `translateX(${img.x}px) rotate(${img.rotation}deg)`;
-      img.phase += 0.05;
-      img.rotation += spinSpeed;
+    for (let i = 1; i < snake.segments.length; i++) {
+      const prev = snake.segments[i - 1];
+      const seg = snake.segments[i];
+
+      seg.x += (prev.x - seg.x) * 0.15;
+      seg.y += (prev.y - seg.y) * 0.15;
+    }
+
+    snake.segments.forEach((seg, i) => {
+      const wiggle = Math.sin(snake.phase - i * 0.5) * amplitude;
+      seg.img.style.transform = `
+        translate(${seg.x}px, ${seg.y + wiggle}px)
+        rotate(${snake.direction === 1 ? 0 : 180}deg)
+      `;
     });
   });
 
