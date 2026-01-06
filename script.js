@@ -7,13 +7,13 @@ const imagesList = [
   'https://github.com/AutoAegis/Aegis-Anime/blob/main/Aegis%20Red.png?raw=true'
 ];
 
-const snakeCount = 5;
-const snakeLength = 6;
-const speed = 2.5;
-const amplitude = 25;
-const waveSpeed = 0.08;
-const segmentSpacing = 50;
-const rowSpacing = 120;
+const snakeLength = 7;
+const segmentSpacing = 70;
+const speed = 2.2;
+const amplitude = 30;
+const waveSpeed = 0.06;
+const spawnInterval = 2000;
+const rowPadding = 90;
 
 let snakes = [];
 
@@ -21,7 +21,9 @@ function randomImage() {
   return imagesList[Math.floor(Math.random() * imagesList.length)];
 }
 
-function createSnake(yBase, direction) {
+function createSnake(direction) {
+  const yBase = Math.random() * (window.innerHeight - rowPadding * 2) + rowPadding;
+
   const snake = {
     direction,
     phase: Math.random() * Math.PI * 2,
@@ -33,51 +35,70 @@ function createSnake(yBase, direction) {
     img.src = randomImage();
     img.className = 'snake-image';
 
-    img.x = direction === 1
+    const startX = direction === 1
       ? -i * segmentSpacing
       : window.innerWidth + i * segmentSpacing;
 
-    img.y = yBase;
     container.appendChild(img);
 
-    snake.segments.push({ img, x: img.x, y: img.y });
+    snake.segments.push({
+      img,
+      x: startX,
+      y: yBase
+    });
   }
 
-  return snake;
+  snakes.push(snake);
 }
 
-for (let i = 0; i < snakeCount; i++) {
-  const direction = i % 2 === 0 ? 1 : -1;
-  snakes.push(createSnake(80 + i * rowSpacing, direction));
+for (let i = 0; i < 4; i++) {
+  createSnake(i % 2 === 0 ? 1 : -1);
 }
+
+setInterval(() => {
+  createSnake(Math.random() > 0.5 ? 1 : -1);
+}, spawnInterval);
 
 function animate() {
-  snakes.forEach(snake => {
+  snakes.forEach((snake, sIndex) => {
     snake.phase += waveSpeed;
 
     const head = snake.segments[0];
     head.x += snake.direction * speed;
-    head.y += Math.sin(snake.phase) * 0.6;
+    head.y += Math.sin(snake.phase) * 0.8;
 
-    if (snake.direction === 1 && head.x > window.innerWidth + 60) {
-      head.x = -60;
+    if (snake.direction === 1 && head.x > window.innerWidth + segmentSpacing * snakeLength) {
+      snake.segments.forEach((seg, i) => {
+        seg.x = -i * segmentSpacing;
+      });
     }
-    if (snake.direction === -1 && head.x < -60) {
-      head.x = window.innerWidth + 60;
+
+    if (snake.direction === -1 && head.x < -segmentSpacing * snakeLength) {
+      snake.segments.forEach((seg, i) => {
+        seg.x = window.innerWidth + i * segmentSpacing;
+      });
     }
 
     for (let i = 1; i < snake.segments.length; i++) {
       const prev = snake.segments[i - 1];
       const seg = snake.segments[i];
 
-      seg.x += (prev.x - seg.x) * 0.15;
-      seg.y += (prev.y - seg.y) * 0.15;
+      const dx = prev.x - seg.x;
+      const dy = prev.y - seg.y;
+      const dist = Math.hypot(dx, dy);
+      const angle = Math.atan2(dy, dx);
+
+      if (dist > segmentSpacing) {
+        seg.x = prev.x - Math.cos(angle) * segmentSpacing;
+        seg.y = prev.y - Math.sin(angle) * segmentSpacing;
+      }
     }
 
     snake.segments.forEach((seg, i) => {
-      const wiggle = Math.sin(snake.phase - i * 0.5) * amplitude;
+      const wave = Math.sin(snake.phase - i * 0.6) * amplitude;
+
       seg.img.style.transform = `
-        translate(${seg.x}px, ${seg.y + wiggle}px)
+        translate(${seg.x}px, ${seg.y + wave}px)
         rotate(${snake.direction === 1 ? 0 : 180}deg)
       `;
     });
